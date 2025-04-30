@@ -5,6 +5,6 @@ class LeaveType < ApplicationRecord
   has_many :leave_requests
   has_many :projected_requests
 
-  validates :type, presence: true
+  validates :name, presence: true
   validates :accrual_rate, presence: true
 end
