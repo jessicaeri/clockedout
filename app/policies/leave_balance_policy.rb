@@ -11,8 +11,18 @@ class LeaveBalancePolicy < ApplicationPolicy
     user.present? && user.id == record.user_id
   end
 
+  def create?
+    # Any authenticated user can create a leave balance for themselves
+    user.present? && user.id == record.user_id
+  end
+
   def update?
     # Check if user can update this leave_balance
+    user.present? && user.id == record.user_id
+  end
+
+  def destroy?
+    # Only allow users to delete their own leave balances
     user.present? && user.id == record.user_id
   end
 

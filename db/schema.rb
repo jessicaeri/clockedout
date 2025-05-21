@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_29_013400) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_07_053914) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -33,6 +33,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_29_013400) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.bigint "leave_type_id", null: false
+    t.string "status", default: "planned", null: false
+    t.time "start_time"
+    t.time "end_time"
     t.index ["leave_type_id"], name: "index_leave_requests_on_leave_type_id"
     t.index ["user_id"], name: "index_leave_requests_on_user_id"
   end
@@ -44,19 +47,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_29_013400) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.boolean "one_time_accrual", default: false, null: false, comment: "If true, this leave type doesn't accrue regularly but can have hours added manually"
     t.index ["user_id"], name: "index_leave_types_on_user_id"
-  end
-
-  create_table "projected_requests", force: :cascade do |t|
-    t.date "start_date"
-    t.date "end_date"
-    t.decimal "requested_hours"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.bigint "leave_type_id", null: false
-    t.index ["leave_type_id"], name: "index_projected_requests_on_leave_type_id"
-    t.index ["user_id"], name: "index_projected_requests_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -74,6 +66,4 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_29_013400) do
   add_foreign_key "leave_requests", "leave_types"
   add_foreign_key "leave_requests", "users"
   add_foreign_key "leave_types", "users"
-  add_foreign_key "projected_requests", "leave_types"
-  add_foreign_key "projected_requests", "users"
 end

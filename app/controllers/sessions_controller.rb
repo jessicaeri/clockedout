@@ -9,14 +9,26 @@ class SessionsController < ApplicationController
     # Get password from params, supporting both nested and direct parameters  
     password = params[:password] || (params[:Session] && params[:Session][:password]) || (params[:session] && params[:session][:password]) || (params[:user] && params[:user][:password])
     
-    @user = User.find_by(email: email)# Finds the user by email
+    # Debug: Log which params are being used
+    Rails.logger.info "Login attempt: email param = #{email}, password present = #{password.present?}"
+    
+    # Make email case-insensitive by downcasing it
+    email = email.to_s.downcase if email.present?
+    
+    @user = User.find_by(email: email) # Finds the user by email
+    Rails.logger.info "User lookup: found = #{@user.present?}"
 
     if @user && @user.authenticate(password) # Checks if the user exists and verifies the password
       token = JWT.encode({ user_id: @user.id }, Rails.application.credentials.secret_key_base) # Generates a JWT token for the authenticated user
 
       render json: { jwt: token, user: @user }, status: :created # Returns the JWT token in the response
     else
-      render json: { error: 'Invalid email or password' }, status: :unauthorized# Returns error if authentication fails
+      # TEMP: More granular error for debugging
+      if !@user
+        render json: { error: 'User not found for email' }, status: :unauthorized
+      else
+        render json: { error: 'Incorrect password' }, status: :unauthorized
+      end
     end
   end
   

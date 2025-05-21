@@ -8,9 +8,20 @@ class User < ApplicationRecord
 
   validates :email, presence: true, uniqueness: true
   validates :name, presence: true
-  validates :password, presence: true
-  validates :password_confirmation, presence: true
+  # Only validate password presence for new records, with no minimum length
+  validates :password, presence: true, on: :create
+  
+  # Only validate password_confirmation on create or when password is changing
+  validates :password_confirmation, presence: true, if: -> { password.present? && new_record? }
   validates :start_date, presence: true
 
+  # Convert email to lowercase before saving
+  before_validation :downcase_email
+
+  private
+
+  def downcase_email
+    self.email = email.to_s.downcase if email.present?
+  end
   
 end

@@ -1,5 +1,6 @@
 class UsersController < ApplicationController
-  after_action :create_default_leave_type_and_balance
+  before_action :authorize_request, only: [:me]
+  after_action :create_default_leave_type_and_balance, only: [:create], if: -> { @user&.persisted? }
   # after_action :calculate_initial_accrued_hours
 
   # POST /api/v1/users
@@ -15,14 +16,30 @@ class UsersController < ApplicationController
       Rails.logger.info "User created successfully: #{@user.inspect}"
       render json: { message: 'User created successfully' }, status: :created
     else
+      Rails.logger.info "User creation failed: #{@user.errors.full_messages}"
       render json: { errors: @user.errors }, status: :unprocessable_entity
     end
   end
 
+  # GET /me
+  def me
+    render json: current_user, status: :ok
+  end
+
   private
+
   # Strong parameters to ensure only allowed attributes are passed
   def user_params
-    params.require(:user).permit(:name, :email, :password, :password_confirmation, :start_date)
+    # Merge nested and top-level params, prioritizing top-level values if present
+    nested = params[:user] || {}
+    merged = {
+      name: params[:name] || nested[:name],
+      email: params[:email] || nested[:email],
+      password: params[:password] || nested[:password],
+      password_confirmation: params[:password_confirmation] || nested[:password_confirmation],
+      start_date: params[:start_date] || nested[:start_date]
+    }
+    ActionController::Parameters.new(merged).permit(:name, :email, :password, :password_confirmation, :start_date)
   end
 
   def create_default_leave_type_and_balance #auto creates leave type  (annual - 4.0 and sick - 4)and balance for user which they can edit if different
